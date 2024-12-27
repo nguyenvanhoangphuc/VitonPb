@@ -13,12 +13,15 @@ import PIL
 import torch
 from diffusers.configuration_utils import FrozenDict
 from diffusers.models import AutoencoderKL, UNet2DConditionModel
-from diffusers.pipeline_utils import DiffusionPipeline
+# from diffusers.pipeline_utils import DiffusionPipeline
+from diffusers.pipelines import DiffusionPipeline
 from diffusers.pipelines.stable_diffusion import StableDiffusionPipelineOutput
-from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_inpaint import prepare_mask_and_masked_image
+# from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_inpaint import prepare_mask_and_masked_image
+from diffusers.pipelines.kandinsky.pipeline_kandinsky_inpaint import prepare_mask_and_masked_image
 from diffusers.schedulers import DDIMScheduler, LMSDiscreteScheduler, PNDMScheduler
 from diffusers.utils import deprecate
-from diffusers.utils import is_accelerate_available, randn_tensor
+from diffusers.utils import is_accelerate_available #, randn_tensor
+from diffusers.utils.torch_utils import randn_tensor
 from packaging import version
 from transformers import CLIPTextModel, CLIPTokenizer
 from src.utils.data_utils import mask_features
@@ -627,7 +630,7 @@ class StableDiffusionTryOnePipeline(DiffusionPipeline):
             negative_prompt_embeds=negative_prompt_embeds,
         )
         # 4. Preprocess mask, image and posemap
-        mask, masked_image = prepare_mask_and_masked_image(image, mask_image)
+        mask, masked_image = prepare_mask_and_masked_image(image, mask_image, height=height, width=width)
 
         pose_map = torch.nn.functional.interpolate(
             pose_map, size=(pose_map.shape[2] // 8, pose_map.shape[3] // 8), mode="bilinear"

@@ -38,11 +38,19 @@ def encode_text_word_embedding(text_encoder: CLIPTextModel, input_ids: torch.ten
     hidden_states = input_embeds + position_embeddings
 
     bsz, seq_len = input_shape
+
+    def build_causal_attention_mask(bsz, seq_len, dtype):
+        # Create a lower triangular matrix filled with ones
+        mask = torch.ones((bsz, seq_len, seq_len), dtype=dtype, device=hidden_states.device)
+        # Make the upper part of the matrix zero (causal attention)
+        mask = torch.tril(mask)  
+        return mask
     # CLIP's text model uses causal mask, prepare it here.
     # https://github.com/openai/CLIP/blob/cfcffb90e69f37bf2ff1e988237a0fbe41f33c04/clip/model.py#L324
-    causal_attention_mask = text_encoder.text_model._build_causal_attention_mask(bsz, seq_len, hidden_states.dtype).to(
-        hidden_states.device
-    )
+    # causal_attention_mask = text_encoder.text_model._build_causal_attention_mask(bsz, seq_len, hidden_states.dtype).to(
+    #     hidden_states.device
+    # )
+    causal_attention_mask = build_causal_attention_mask(bsz, seq_len, hidden_states.dtype).to(hidden_states.device)
 
     encoder_outputs = text_encoder.text_model.encoder(
         inputs_embeds=hidden_states,
